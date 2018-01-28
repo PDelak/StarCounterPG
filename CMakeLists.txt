@@ -2,6 +2,7 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+
 # Remove the warning that WIN32 is not defined in Cygwin any more.
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
@@ -29,7 +30,9 @@ else()
     set(STARCOUNTERPG_PLATFORM_WINDOWS 0)
 endif()
 
-
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.3)
+    message(FATAL_ERROR "Require at least gcc-5.3")
+endif()
 
 set(GTEST_REQUIRED_FLAGS "-Wno-shift-sign-overflow -Wno-missing-noreturn -Wno-used-but-marked-unused -Wno-deprecated -Wno-missing-variable-declarations -Wno-global-constructors -Wno-weak-vtables -Wno-undef")
 set(WEVERYTHING_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic ${GTEST_REQUIRED_FLAGS}")
