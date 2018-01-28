@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <algorithm>
+#include <wchar.h>
+#include <cstring>
 #include "pg/pg_list.h"
 
 template<typename DEST>
@@ -17,7 +19,10 @@ struct AssignemntTypeChooser
 {
     static T* assign(T* type, int value)
     {
+	#ifdef __GNUC__
+        #else
         static_assert("Unsupported type");
+	#endif
     }
 };
 
@@ -68,8 +73,13 @@ Node* makeIdent(const std::basic_string<wchar_t>& name)
     auto node = std::make_unique<Ident>();
     node->type = T_Ident;
     std::unique_ptr<wchar_t[]> wchar_buf (new wchar_t[name.size() + 1]);
+    memset(wchar_buf.get(), 0, sizeof(wchar_t) * (name.size()+1));
     node->name = wchar_buf.release();
+    #ifdef __GNUC__
+    wcsncpy(const_cast<wchar_t*>(node->name), name.c_str(), name.size());    
+    #else
     wcsncpy_s(const_cast<wchar_t*>(node->name), name.size() + 1, name.c_str(), name.size());
+    #endif
     return node.release();
 
 }
