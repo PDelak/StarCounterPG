@@ -7,6 +7,11 @@
 #include <cstring>
 #include "pg/pg_list.h"
 
+struct IdentExt : public Ident
+{
+    ~IdentExt() { delete[] name; }
+};
+
 template<typename DEST>
 DEST* castNode(const ListCell* cell)
 {
@@ -70,7 +75,7 @@ int getListSize(const List& list)
 
 Node* makeIdent(const std::basic_string<wchar_t>& name)
 {
-    auto node = std::make_unique<Ident>();
+    auto node = std::make_unique<IdentExt>();
     node->type = T_Ident;
     std::unique_ptr<wchar_t[]> wchar_buf (new wchar_t[name.size() + 1]);
     memset(wchar_buf.get(), 0, sizeof(wchar_t) * (name.size()+1));
@@ -186,7 +191,8 @@ BasicListIterator erase(BasicListIterator& iter)
     if (prev) prev->next = iter.nodePtr->next;
     decListSize(iter.list);    
     BasicListIterator i(iter.list, iter.nodePtr->next);
-    
+    // TODO below delete depends on ValueType
+    delete toDelete->data.ptr_value;
     delete toDelete;
     return i;
 }
