@@ -192,7 +192,7 @@ BasicListIterator erase(BasicListIterator& iter)
     decListSize(iter.list);    
     BasicListIterator i(iter.list, iter.nodePtr->next);
     // TODO below delete depends on ValueType
-    delete toDelete->data.ptr_value;
+    delete reinterpret_cast<ValueType*>(toDelete->data.ptr_value);
     delete toDelete;
     return i;
 }
