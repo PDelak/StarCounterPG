@@ -6,6 +6,22 @@
 
 TEST(ListTest, dummy) {}
 
+void CheckEQList(const List& list1, const List& list2)
+{
+    EXPECT_EQ(list_length(&list1), list_length(&list2));
+    
+    auto list1_begin = begin(list1);
+    auto list1_end = end(list1);
+    auto list2_begin = begin(list2);
+
+    std::for_each(list1_begin, list1_end, [&](const ListCell* cell) {
+        auto l1Value = std::wstring(castNode<Ident>(cell)->name);
+        auto l2Value = std::wstring(castNode<Ident>(*list2_begin)->name);
+        ++list2_begin;
+        EXPECT_EQ(l1Value, l2Value);
+    });    
+}
+
 List buildList(const std::initializer_list<std::wstring>& arg)
 {
     List list = makeList();
@@ -27,7 +43,7 @@ TEST(ListTest, test_find)
         std::wstring str(buff);
         return str == L"bolek";
     });
-    std::wcout << castNode<Ident>(*it)->name << std::endl;
+    EXPECT_EQ(castNode<Ident>(*it)->name, std::wstring(L"bolek"));
     EXPECT_EQ(list_length(&list) , 3);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
@@ -36,7 +52,8 @@ TEST(ListTest, test_find)
 TEST(ListTest, test_erase1)
 {
     List list = buildList({ L"delak", L"bolek", L"patryk" });
-    
+    List resultList = buildList({ L"delak", L"patryk" });
+
     auto b = begin(list);
     auto e = end(list);
     
@@ -47,7 +64,9 @@ TEST(ListTest, test_erase1)
     });
     erase<Ident>(it);
     EXPECT_EQ(list_length(&list) , 2);
+    CheckEQList(list, resultList);
     clean(list);
+    clean(resultList);
     EXPECT_EQ(list_length(&list) , 0);
 }
 
@@ -55,7 +74,7 @@ TEST(ListTest, test_erase1)
 TEST(ListTest, test_erase2)
 {
     List list = buildList({ L"delak", L"bolek" });
-
+    List resultList = buildList({ L"delak" });
     auto b = begin(list);
     auto e = end(list);
 
@@ -66,15 +85,16 @@ TEST(ListTest, test_erase2)
     });
     erase<Ident>(it);
     EXPECT_EQ(list_length(&list) , 1);
-    std::wcout << castNode<Ident>(*b)->name << std::endl;
+    CheckEQList(list, resultList);
     clean(list);
+    clean(resultList);
     EXPECT_EQ(list_length(&list) , 0);
 }
 
 TEST(ListTest, test_erase3)
 {
     List list = buildList({ L"delak", L"bolek" });
-
+    List resultList = buildList({ L"bolek" });
     auto b = begin(list);
     auto e = end(list);
 
@@ -85,8 +105,9 @@ TEST(ListTest, test_erase3)
     ++itSecond;
     erase<Ident>(it);
     EXPECT_EQ(list_length(&list) , 1);
-    std::wcout << castNode<Ident>(*itSecond)->name << std::endl;
+    CheckEQList(list, resultList);
     clean(list);
+    clean(resultList);
     EXPECT_EQ(list_length(&list) , 0);
 }
 
@@ -108,10 +129,9 @@ TEST(ListTest, test_iterate)
     auto it_begin = begin(list);
     
     while (it_begin != end(list)) {
-        printIdent(castNode<Ident>(*it_begin));
         ++it_begin;
     }
-    std::cout << list_length(&list) << std::endl;
+    EXPECT_EQ(list_length(&list), 5);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
 }
@@ -119,10 +139,9 @@ TEST(ListTest, test_iterate)
 TEST(ListTest, test_reverse1)
 {
     List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
-    
+    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
     auto result = reverse_impl_1(list);
-
-    std::wcout << result.c_str() << std::endl;
+    EXPECT_EQ(result, expectedResult);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
 }
@@ -130,9 +149,10 @@ TEST(ListTest, test_reverse1)
 TEST(ListTest, test_reverse2)
 {
     List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
+    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
 
     auto result = reverse_impl_2(list);
-    std::wcout << result.c_str() << std::endl;
+    EXPECT_EQ(result, expectedResult);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
 }
@@ -140,9 +160,10 @@ TEST(ListTest, test_reverse2)
 TEST(ListTest, test_reverse3)
 {
     List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
+    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
 
     auto result = reverse_impl_3(list);
-    std::wcout << result.c_str() << std::endl;
+    EXPECT_EQ(result, expectedResult);
     EXPECT_EQ(list_length(&list) , 5);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
@@ -151,9 +172,10 @@ TEST(ListTest, test_reverse3)
 TEST(ListTest, test_reverse4)
 {
     List list = buildList({ L"delak" });
+    auto expectedResult = std::wstring(L"delak");
 
     auto result = reverse_impl_3(list);
-    std::wcout << result.c_str() << std::endl;
+    EXPECT_EQ(result, expectedResult);
     EXPECT_EQ(list_length(&list) , 1);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
@@ -163,7 +185,8 @@ TEST(ListTest, test_reverse5)
 {
     List list = makeList();
     auto result = reverse_impl_3(list);
-    std::wcout << result.c_str() << std::endl;
+    auto expectedResult = std::wstring(L"");
+    EXPECT_EQ(result, expectedResult);
     EXPECT_EQ(list_length(&list) , 0);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
@@ -172,9 +195,9 @@ TEST(ListTest, test_reverse5)
 TEST(ListTest, test_reverse6)
 {
     List list = buildList({ L"delak", L"bolek" });
-
+    auto expectedResult = std::wstring(L"bolek.delak");
     auto result = reverse_impl_3(list);
-    std::wcout << result.c_str() << std::endl;
+    EXPECT_EQ(result, expectedResult);
     EXPECT_EQ(list_length(&list) , 2);
     clean(list);
     EXPECT_EQ(list_length(&list) , 0);
