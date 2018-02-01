@@ -6,24 +6,48 @@
 #include <algorithm>
 #include <wchar.h>
 #include <cstring>
+#include <list>
 #include "pg/pg_list.h"
-
-template<typename T>
-struct ListNodeTrait
-{
-    typedef ListCell node;
-};
-
-struct IdentExt : public Ident
-{
-    ~IdentExt() { delete[] name; }
-};
 
 template<typename DEST>
 DEST* castNode(const ListCell* cell)
 {
     return reinterpret_cast<DEST*>(cell->data.ptr_value);
 }
+
+
+template<typename T>
+struct ListNodeTrait;
+
+template<>
+struct ListNodeTrait<List>
+{
+    typedef ListCell* node;
+
+    static void appendElement(ListCell* node, bool& firstElement, std::wstring& result)
+    {
+        if (!firstElement) result.append(L".");
+        result.append(castNode<Ident>(node)->name);
+        firstElement = false;
+    }
+};
+
+template<>
+struct ListNodeTrait<std::list<Node*>>
+{
+    typedef Node* node;
+    static void appendElement(Node* node, bool& firstElement, std::wstring& result)
+    {
+        if (!firstElement) result.append(L".");
+        result.append(reinterpret_cast<Ident*>(node)->name);
+        firstElement = false;
+    }
+};
+
+struct IdentExt : public Ident
+{
+    ~IdentExt() { delete[] name; }
+};
 
 
 template<typename T>

@@ -5,12 +5,6 @@
 #include <stack>
 #include <list>
 
-void appendElement(const std::wstring& str, bool& firstElement, std::wstring& result)
-{
-    if (!firstElement) result.append(L".");
-    result.append(str);
-    firstElement = false;
-}
 
 // implementation with explicit stack
 // O(n) time complexity, O(n) space complexity
@@ -20,16 +14,16 @@ std::wstring reverse_impl_1(const T& stream)
     auto b = begin(stream);
     auto e = end(stream);
 
-    std::stack<typename ListNodeTrait<T>::node*> elems;
+    std::stack<typename ListNodeTrait<T>::node> elems;
 
-    std::for_each(b, e, [&](typename ListNodeTrait<T>::node* element) {
+    std::for_each(b, e, [&](typename ListNodeTrait<T>::node element) {
         elems.push(element);
     });
     
     std::wstring result;
     bool first = true;
     while (!elems.empty()) {
-        appendElement(castNode<Ident>(elems.top())->name, first, result);
+        ListNodeTrait<T>::appendElement(elems.top(), first, result);
         elems.pop();
     }
 
@@ -44,30 +38,31 @@ std::wstring reverse_impl_2(const T& stream)
     auto b = begin(stream);
     auto e = end(stream);
 
-    std::list<typename ListNodeTrait<T>::node*> elems;
+    std::list<typename ListNodeTrait<T>::node> elems;
 
-    std::for_each(b, e, [&](typename ListNodeTrait<T>::node* element) {
+    std::for_each(b, e, [&](typename ListNodeTrait<T>::node element) {
         elems.push_front(element);
     });
 
     std::wstring result;
 
     bool first = true;
-    std::for_each(elems.begin(), elems.end(), [&](typename ListNodeTrait<T>::node* element) {
-        appendElement(castNode<Ident>(element)->name, first, result);
+    std::for_each(elems.begin(), elems.end(), [&](typename ListNodeTrait<T>::node element) {
+        ListNodeTrait<T>::appendElement(element, first, result);
     });
 
     return result;
 }
 
-void recursive_reverse_impl_helper(const List& list, bool& first, BasicListIterator i, std::wstring& result)
+template<typename T>
+void recursive_reverse_impl_helper(const T& list, bool& first, BasicListIterator i, std::wstring& result)
 {
     auto e = end(list);
     if (i == e) return;
     BasicListIterator j = i;
     ++j;        
     recursive_reverse_impl_helper(list, first, j, result);
-    appendElement(castNode<Ident>(*i)->name, first, result);
+    ListNodeTrait<T>::appendElement(*i, first, result);
 }
 
 // recursive implementation with implicit stack

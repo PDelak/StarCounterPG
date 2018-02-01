@@ -174,6 +174,19 @@ TEST(ListTest, test_reverse)
     reverseTestHelper([](const List& list) { return reverse_impl_3(list);});    
 }
 
+TEST(ListTest, test_reverse_std_list)
+{
+    std::list<Node*> l;
+
+    l.push_back(makeIdent(L"delak"));
+    l.push_back(makeIdent(L"bolek"));
+
+    auto result = reverse_impl_1(l);
+    auto expectedResult = L"bolek.delak";
+    EXPECT_EQ(result, expectedResult);
+    std::for_each(l.begin(), l.end(), [](const Node* n) { delete n;});
+}
+
 int main(int argc, char* argv[]) 
 {    
     ::testing::InitGoogleTest(&argc, argv);
