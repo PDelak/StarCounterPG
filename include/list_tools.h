@@ -1,6 +1,7 @@
 #ifndef LIST_TOOLS_H
 #define LIST_TOOLS_H
 
+#include <iostream>
 #include <memory>
 #include <algorithm>
 #include <wchar.h>
