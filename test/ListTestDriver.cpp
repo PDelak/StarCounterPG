@@ -1,10 +1,38 @@
-#include <iostream>
+#include <functional>
 #include "list_tools.h"
 #include "reverse_impl.h"
 
 #include "gtest/gtest.h"
 
-TEST(ListTest, dummy) {}
+List buildList(const std::vector<std::wstring>& arg)
+{
+    List list = makeList();
+    for (auto elem : arg) {
+        push_back(list, makeIdent(elem.c_str()));
+    }
+    return list;
+}
+
+std::vector<std::pair<std::vector<std::wstring>, std::wstring>> reverseInputOutput = {
+    {{ L"" }, L"" },
+    {{ L"delak" }, L"delak" },
+    {{ L"delak", L"bolek" }, L"bolek.delak" },
+    {{ L"delak", L"bolek", L"patryk", L"monika", L"milosz" }, L"milosz.monika.patryk.bolek.delak" }
+};
+
+template<typename T>
+void reverseTestHelper(const T& fun)
+{
+    for (auto rio : reverseInputOutput) {
+        List list = buildList(rio.first);
+        EXPECT_EQ(list_length(&list), rio.first.size());
+        const auto& expectedResult = rio.second;
+        auto result = fun(list);
+        EXPECT_EQ(result, expectedResult);
+        clean(list);
+        EXPECT_EQ(list_length(&list), 0);
+    }
+}
 
 void CheckEQList(const List& list1, const List& list2)
 {
@@ -20,15 +48,6 @@ void CheckEQList(const List& list1, const List& list2)
         ++list2_begin;
         EXPECT_EQ(l1Value, l2Value);
     });    
-}
-
-List buildList(const std::initializer_list<std::wstring>& arg)
-{
-    List list = makeList();
-    for (auto elem : arg) {
-        push_back(list, makeIdent(elem.c_str()));
-    }
-    return list;
 }
 
 TEST(ListTest, test_find)
@@ -136,72 +155,6 @@ TEST(ListTest, test_iterate)
     EXPECT_EQ(list_length(&list) , 0);
 }
 
-TEST(ListTest, test_reverse1)
-{
-    List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
-    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
-    auto result = reverse_impl_1(list);
-    EXPECT_EQ(result, expectedResult);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
-
-TEST(ListTest, test_reverse2)
-{
-    List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
-    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
-
-    auto result = reverse_impl_2(list);
-    EXPECT_EQ(result, expectedResult);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
-
-TEST(ListTest, test_reverse3)
-{
-    List list = buildList({ L"delak", L"bolek", L"patryk", L"monika", L"milosz" });
-    auto expectedResult = std::wstring(L"milosz.monika.patryk.bolek.delak");
-
-    auto result = reverse_impl_3(list);
-    EXPECT_EQ(result, expectedResult);
-    EXPECT_EQ(list_length(&list) , 5);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
-
-TEST(ListTest, test_reverse4)
-{
-    List list = buildList({ L"delak" });
-    auto expectedResult = std::wstring(L"delak");
-
-    auto result = reverse_impl_3(list);
-    EXPECT_EQ(result, expectedResult);
-    EXPECT_EQ(list_length(&list) , 1);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
-
-TEST(ListTest, test_reverse5)
-{
-    List list = makeList();
-    auto result = reverse_impl_3(list);
-    auto expectedResult = std::wstring(L"");
-    EXPECT_EQ(result, expectedResult);
-    EXPECT_EQ(list_length(&list) , 0);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
-
-TEST(ListTest, test_reverse6)
-{
-    List list = buildList({ L"delak", L"bolek" });
-    auto expectedResult = std::wstring(L"bolek.delak");
-    auto result = reverse_impl_3(list);
-    EXPECT_EQ(result, expectedResult);
-    EXPECT_EQ(list_length(&list) , 2);
-    clean(list);
-    EXPECT_EQ(list_length(&list) , 0);
-}
 
 
 TEST(ListTest, test_ListHolder)
@@ -212,6 +165,13 @@ TEST(ListTest, test_ListHolder)
     }
     EXPECT_EQ(list_length(&list) , 0);
 
+}
+
+TEST(ListTest, test_reverse)
+{
+    reverseTestHelper([](const List& list) { return reverse_impl_1(list);});
+    reverseTestHelper([](const List& list) { return reverse_impl_2(list);});
+    reverseTestHelper([](const List& list) { return reverse_impl_3(list);});    
 }
 
 int main(int argc, char* argv[]) 
