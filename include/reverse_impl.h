@@ -55,11 +55,11 @@ std::wstring reverse_impl_2(const T& stream)
 }
 
 template<typename T>
-void recursive_reverse_impl_helper(const T& list, bool& first, BasicListIterator i, std::wstring& result)
+void recursive_reverse_impl_helper(const T& list, bool& first, typename ListNodeTrait<T>::iterator i, std::wstring& result)
 {
-    auto e = end(list);
+    auto e = ListNodeTrait<T>::end(list);
     if (i == e) return;
-    BasicListIterator j = i;
+    typename ListNodeTrait<T>::iterator j = i;
     ++j;        
     recursive_reverse_impl_helper(list, first, j, result);
     ListNodeTrait<T>::appendElement(*i, first, result);
@@ -70,7 +70,7 @@ void recursive_reverse_impl_helper(const T& list, bool& first, BasicListIterator
 template<typename T>
 std::wstring reverse_impl_3(const T& stream)
 {
-    auto b = begin(stream);
+    auto b = ListNodeTrait<T>::begin(stream);
 
     std::wstring result;
     bool first = true;

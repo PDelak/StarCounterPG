@@ -17,19 +17,6 @@ DEST* castNode(const ListCell* cell)
     return reinterpret_cast<DEST*>(cell->data.ptr_value);
 }
 
-template<>
-struct ListNodeTrait<List>
-{
-    typedef ListCell* node;
-
-    static void appendElement(ListCell* node, bool& firstElement, std::wstring& result)
-    {
-        if (!firstElement) result.append(L".");
-        result.append(castNode<Ident>(node)->name);
-        firstElement = false;
-    }
-};
-
 
 struct IdentExt : public Ident
 {
@@ -248,6 +235,25 @@ private:
     ListHolder& operator=(const ListHolder&);
     List& list;
 };
+
+
+template<>
+struct ListNodeTrait<List>
+{
+    typedef ListCell* node;
+    typedef BasicListIterator iterator;
+
+    static iterator begin(const List& list) { return ::begin(list); }
+    static iterator end(const List& list) { return ::end(list); }
+
+    static void appendElement(ListCell* node, bool& firstElement, std::wstring& result)
+    {
+        if (!firstElement) result.append(L".");
+        result.append(castNode<Ident>(node)->name);
+        firstElement = false;
+    }
+};
+
 
 void traverseNodes(const List& list)
 {
