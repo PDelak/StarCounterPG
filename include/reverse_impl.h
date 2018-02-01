@@ -20,9 +20,9 @@ std::wstring reverse_impl_1(const T& stream)
     auto b = begin(stream);
     auto e = end(stream);
 
-    std::stack<ListCell*> elems;
+    std::stack<typename ListNodeTrait<T>::node*> elems;
 
-    std::for_each(b, e, [&](ListCell* element) {
+    std::for_each(b, e, [&](typename ListNodeTrait<T>::node* element) {
         elems.push(element);
     });
     
@@ -44,16 +44,16 @@ std::wstring reverse_impl_2(const T& stream)
     auto b = begin(stream);
     auto e = end(stream);
 
-    std::list<ListCell*> elems;
+    std::list<typename ListNodeTrait<T>::node*> elems;
 
-    std::for_each(b, e, [&](ListCell* element) {
+    std::for_each(b, e, [&](typename ListNodeTrait<T>::node* element) {
         elems.push_front(element);
     });
 
     std::wstring result;
 
     bool first = true;
-    std::for_each(elems.begin(), elems.end(), [&](ListCell* element) {
+    std::for_each(elems.begin(), elems.end(), [&](typename ListNodeTrait<T>::node* element) {
         appendElement(castNode<Ident>(element)->name, first, result);
     });
 

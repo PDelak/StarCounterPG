@@ -8,6 +8,12 @@
 #include <cstring>
 #include "pg/pg_list.h"
 
+template<typename T>
+struct ListNodeTrait
+{
+    typedef ListCell node;
+};
+
 struct IdentExt : public Ident
 {
     ~IdentExt() { delete[] name; }
