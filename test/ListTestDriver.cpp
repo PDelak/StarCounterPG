@@ -1,5 +1,6 @@
 #include <functional>
 #include "list_tools.h"
+#include "std_list_trait.h"
 #include "reverse_impl.h"
 
 #include "gtest/gtest.h"

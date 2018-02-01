@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <wchar.h>
 #include <cstring>
+#include "list_node_trait.h"
 #include <list>
+
 #include "pg/pg_list.h"
 
 template<typename DEST>
@@ -14,10 +16,6 @@ DEST* castNode(const ListCell* cell)
 {
     return reinterpret_cast<DEST*>(cell->data.ptr_value);
 }
-
-
-template<typename T>
-struct ListNodeTrait;
 
 template<>
 struct ListNodeTrait<List>
@@ -32,17 +30,6 @@ struct ListNodeTrait<List>
     }
 };
 
-template<>
-struct ListNodeTrait<std::list<Node*>>
-{
-    typedef Node* node;
-    static void appendElement(Node* node, bool& firstElement, std::wstring& result)
-    {
-        if (!firstElement) result.append(L".");
-        result.append(reinterpret_cast<Ident*>(node)->name);
-        firstElement = false;
-    }
-};
 
 struct IdentExt : public Ident
 {
