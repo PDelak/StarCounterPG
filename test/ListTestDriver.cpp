@@ -14,6 +14,15 @@ List buildList(const std::vector<std::wstring>& arg)
     return list;
 }
 
+std::list<Node*> buildStdList(const std::vector<std::wstring>& arg)
+{
+    std::list<Node*> stdlist;
+    for (auto elem : arg) {
+        stdlist.push_back(makeIdent(elem.c_str()));
+    }
+    return stdlist;
+}
+
 std::vector<std::pair<std::vector<std::wstring>, std::wstring>> reverseInputOutput = {
     {{ L"" }, L"" },
     {{ L"delak" }, L"delak" },
@@ -34,6 +43,20 @@ void reverseTestHelper(const T& fun)
         EXPECT_EQ(list_length(&list), 0);
     }
 }
+
+template<typename T>
+void reverseStdListTestHelper(const T& fun)
+{
+    for (auto rio : reverseInputOutput) {
+        std::list<Node*> stdlist = buildStdList(rio.first);
+        EXPECT_EQ(stdlist.size(), rio.first.size());
+        const auto& expectedResult = rio.second;
+        auto result = fun(stdlist);
+        EXPECT_EQ(result, expectedResult);
+        std::for_each(stdlist.begin(), stdlist.end(), [](const Node* n) { delete n;});
+    }
+}
+
 
 void CheckEQList(const List& list1, const List& list2)
 {
@@ -177,15 +200,9 @@ TEST(ListTest, test_reverse)
 
 TEST(ListTest, test_reverse_std_list)
 {
-    std::list<Node*> l;
-
-    l.push_back(makeIdent(L"delak"));
-    l.push_back(makeIdent(L"bolek"));
-
-    auto result = reverse_impl_1(l);
-    auto expectedResult = L"bolek.delak";
-    EXPECT_EQ(result, expectedResult);
-    std::for_each(l.begin(), l.end(), [](const Node* n) { delete n;});
+    reverseStdListTestHelper([](const std::list<Node*>& list) { return reverse_impl_1(list);});
+    reverseStdListTestHelper([](const std::list<Node*>& list) { return reverse_impl_2(list);});
+    reverseStdListTestHelper([](const std::list<Node*>& list) { return reverse_impl_3(list);}); 
 }
 
 int main(int argc, char* argv[]) 
