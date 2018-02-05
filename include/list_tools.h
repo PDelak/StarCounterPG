@@ -271,6 +271,69 @@ private:
     List& list;
 };
 
+// AutoList is a wrapper around a function API 
+// raising abstraction bar
+// It also represents a history of work on this task
+// which started bottom-up, growing with better abstractions 
+// over time
+template<typename T>
+struct AutoList;
+
+template<>
+struct AutoList<int>
+{
+    AutoList() { list = makeList(); }
+    AutoList(const AutoList& rhs) {
+        auto cloneF = [](const ListCell* cell) { return cell->data.int_value;};
+        list = copy(rhs.list, cloneF);
+    }
+    AutoList& operator=(AutoList rhs)
+    {
+        std::swap(list, rhs.list);
+        return *this;
+    }
+    ~AutoList() { ::clean(list); }
+    void push_front(int value) { ::push_front(list, value); }
+    void push_back(int value) { ::push_back(list, value); }
+    void erase(BasicListIterator it) { ::erase(it); }
+    void reverse() { ::reverse(list); }
+    int size() { return ::list_length(&list); }
+    BasicListIterator begin() { return ::begin(list); }
+    BasicListIterator end() { return ::end(list); }
+private:
+    List list;
+};
+
+template<>
+struct AutoList<Node>
+{
+    AutoList(std::function<Node*(const ListCell* cell)> fun):cloneFun(fun) { list = makeList(); }
+    AutoList(const AutoList& rhs) { list = copy(rhs.list, rhs.cloneFun); }
+    AutoList& operator=(AutoList rhs)
+    {
+        std::swap(list, rhs.list);
+        return *this;
+    }
+    ~AutoList() { cleanNodes(); ::clean(list); }
+    void push_front(Node* value) { ::push_front(list, value); }
+    void push_back(Node* value) { ::push_back(list, value); }
+    void erase(BasicListIterator it) { ::erase(it); }
+    void reverse() { ::reverse(list); }
+    int size() { return ::list_length(&list); }
+    BasicListIterator begin() { return ::begin(list); }
+    BasicListIterator end() { return ::end(list); }
+private:
+    List list;
+    std::function<Node*(const ListCell* cell)> cloneFun;
+
+    void cleanNodes()
+    {
+        std::for_each(begin(), end(), [&](const ListCell* cell) {
+            delete castNode<Node>(cell);
+        });
+    }
+
+};
 
 // ListNodeTrait implementation for List type
 // Reverse implementations can work with any type
