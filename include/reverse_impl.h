@@ -5,6 +5,15 @@
 #include <stack>
 #include <list>
 
+// Reverse algorithms will work with any
+// data structure that provides forward iterator 
+// and specialization for ListNodeTrait<>
+// As an example for that look at std_list_trait.h 
+// or trait for List type defined in list_tools.h
+
+
+// All reverse implementations take one parameter
+// a container that support forward iterator
 
 // implementation with explicit stack
 // O(n) time complexity, O(n) space complexity
@@ -79,5 +88,25 @@ std::wstring reverse_impl_3(const T& stream)
     return result;
 }
 
+// O(n) time complexity O(1) space
+// based on T::reverse()
+template<typename T>
+std::wstring reverse_impl_4(T& stream)
+{
+    ListNodeTrait<T>::reverse(stream);
+
+    std::wstring result;
+
+    bool first = true;
+
+    auto b = begin(stream);
+    auto e = end(stream);
+
+    std::for_each(b, e, [&](typename ListNodeTrait<T>::node element) {
+        ListNodeTrait<T>::appendElement(element, first, result);
+    });
+
+    return result;
+}
 
 #endif

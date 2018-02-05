@@ -10,6 +10,7 @@ struct ListNodeTrait<std::list<Node*>>
     typedef std::list<Node*>::const_iterator iterator;
     static iterator begin(const std::list<Node*>& stdlist) { return stdlist.begin(); }
     static iterator end(const std::list<Node*>& stdlist) { return stdlist.end(); }
+    static void reverse(std::list<Node*>& stdlist) { stdlist.reverse(); }
 
     static void appendElement(Node* node, bool& firstElement, std::wstring& result)
     {

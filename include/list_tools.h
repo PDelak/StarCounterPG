@@ -11,31 +11,37 @@
 
 #include "pg/pg_list.h"
 
+// Casts ListCell to specific Node* type
+// example cast to Ident : castNode<Ident>(cell)
 template<typename DEST>
 DEST* castNode(const ListCell* cell)
 {
     return reinterpret_cast<DEST*>(cell->data.ptr_value);
 }
 
-
+// IdentExt structure is an extension 
+// to Ident type to provide destructor
+// that will release name 
 struct IdentExt : public Ident
 {
     ~IdentExt() { delete[] name; }
 };
 
-
+// List can contain void* or int values
+// To choose to which union field it should be assigned to
+// below type has been provided 
+// Specific specializations do the work
+// It will not compile if there will be choosen different type
 template<typename T>
 struct AssignemntTypeChooser
 {
     static T* assign(T* type, int value)
     {
-	#ifdef __GNUC__
-        #else
-        static_assert("Unsupported type");
-	#endif
+        static_assert(std::is_integral<T>::value || std::is_same<T, Node>::value, "Unsupported type");
     }
 };
 
+// Provides choosing data.int_value and assignment to int value
 template<>
 struct AssignemntTypeChooser<int>
 {
@@ -46,7 +52,7 @@ struct AssignemntTypeChooser<int>
     }
 };
 
-
+// Provides choosing data.ptr_value and assignment to Node* 
 template<>
 struct AssignemntTypeChooser<Node*>
 {
@@ -57,6 +63,7 @@ struct AssignemntTypeChooser<Node*>
     }
 };
 
+// Constructor for List container
 List makeList()
 {
     List list;
@@ -67,17 +74,13 @@ List makeList()
     return list;
 }
 
-
-void decListSize(const List& list)
-{
-    --const_cast<List&>(list).length;
-}
-
+// Returns list length
 int getListSize(const List& list)
 {
     return const_cast<List&>(list).length;
 }
 
+// Ident(Ext) constructor 
 Node* makeIdent(const std::basic_string<wchar_t>& name)
 {
     auto node = std::make_unique<IdentExt>();
@@ -94,11 +97,7 @@ Node* makeIdent(const std::basic_string<wchar_t>& name)
 
 }
 
-void cleanIdent(const Ident* ident)
-{
-    delete [] ident->name;
-}
-
+// Insert element to List at the end
 template<typename ValueType>
 void push_back(List& list, ValueType value)
 {    
@@ -114,7 +113,7 @@ void push_back(List& list, ValueType value)
     list.length = list.length + 1;
 }
 
-
+// Insert element to List at the beginning
 template<typename ValueType>
 void push_front(List& list, ValueType value)
 {
@@ -130,7 +129,7 @@ void push_front(List& list, ValueType value)
     list.length = list.length + 1;    
 }
 
-
+// ForwardIterator for List type
 struct BasicListIterator
     :public std::iterator<std::forward_iterator_tag, ListCell*>
 {
@@ -174,14 +173,15 @@ private:
     }
     friend BasicListIterator begin(const List& list);
     friend BasicListIterator end(const List& list);
-    template<typename ValueType>
     friend BasicListIterator erase(BasicListIterator& iter);
 };
-   
+
+// Returns List head
 BasicListIterator begin(const List& list) { return BasicListIterator(list, list.head);}
+// Returns List end
 BasicListIterator end(const List& list)   { return BasicListIterator(list, nullptr);}
 
-template<typename ValueType>
+// Removes element pointer by iterator
 BasicListIterator erase(BasicListIterator& iter)
 {
     auto toDelete = iter.nodePtr;
@@ -193,27 +193,61 @@ BasicListIterator erase(BasicListIterator& iter)
     if (toDelete == iter.list.tail) {
         tmpList.tail = prev;
     }
-    if (prev) prev->next = iter.nodePtr->next;
-    decListSize(iter.list);    
+    if (prev) prev->next = iter.nodePtr->next;      
+    --const_cast<List&>(iter.list).length;
     BasicListIterator i(iter.list, iter.nodePtr->next);
-    // TODO below delete depends on ValueType
-    delete reinterpret_cast<ValueType*>(toDelete->data.ptr_value);
     delete toDelete;
     return i;
 }
 
+// Remove all List elements
 void clean(const List& list)
 {
     auto current = begin(list);
     auto e = end(list);
     while (current != e) {
         auto i = current++;        
-        erase<Node>(i);
+        erase(i);
     }    
+}
+
+// Returns a copy of List
+// take a list and clone function as parameter
+template<typename NodeCloneFunction>
+List copy(const List& list, NodeCloneFunction cloneF)
+{
+    List newList = makeList();
+    auto b = begin(list);
+    auto e = end(list);
+
+    std::for_each(b, e, [&](const ListCell* cell) {
+        push_back(newList, cloneF(cell));
+    });
+    return newList;
+}
+
+// Reverse list inplace by direct pointer manipulation
+void reverse(List& list)
+{
+    ListCell* head = list.head;
+    ListCell* tail = list.head;
+    ListCell *prev = nullptr;
+    ListCell *next;
+
+    while (head) {
+        next = head->next;
+        head->next = prev;
+        prev = head;
+        head = next;
+    }
+
+    list.head = prev;
+    list.tail = tail;
 }
 
 typedef std::unique_ptr<List> UniqueListPtr;
 
+// Create a List in head and returns a std::unique_ptr to it
 UniqueListPtr makeListHeap()
 {
     auto list = UniqueListPtr(new List());
@@ -224,7 +258,8 @@ UniqueListPtr makeListHeap()
     return list;
 }
 
-
+// Basic RAII List holder
+// cleans List during destruction
 struct ListHolder
 {
     ListHolder(List& l):list(l) {}
@@ -237,6 +272,9 @@ private:
 };
 
 
+// ListNodeTrait implementation for List type
+// Reverse implementations can work with any type
+// that provides few additional information about type
 template<>
 struct ListNodeTrait<List>
 {
@@ -245,6 +283,7 @@ struct ListNodeTrait<List>
 
     static iterator begin(const List& list) { return ::begin(list); }
     static iterator end(const List& list) { return ::end(list); }
+    static void reverse(List& list) { ::reverse(list); }
 
     static void appendElement(ListCell* node, bool& firstElement, std::wstring& result)
     {
@@ -253,29 +292,5 @@ struct ListNodeTrait<List>
         firstElement = false;
     }
 };
-
-
-void traverseNodes(const List& list)
-{
-    auto current = list.head;
-    while (current) {
-        std::wcout << castNode<Ident>(current)->name << std::endl;
-        current = current->next;
-    }
-}
-void traverseInts(const List& list)
-{
-    auto current = list.head;
-    while (current) {
-        std::wcout << current->data.int_value << std::endl;
-        current = current->next;
-    }
-}
-
-void printIdent(Ident* ident)
-{
-    std::wcout << ident->name << std::endl;
-}
-
 
 #endif
