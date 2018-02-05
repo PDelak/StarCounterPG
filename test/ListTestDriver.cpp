@@ -274,6 +274,32 @@ TEST(ListTest, test_copy_int)
     clean(listCopy);
 }
 
+TEST(ListTest, test_autolist_int)
+{
+    AutoList<int> alist;
+    alist.push_back(1);
+    alist.push_back(2);
+    alist.push_back(3);
+    EXPECT_EQ(alist.size(), 3);
+    AutoList<int> alistCopy = alist;
+    EXPECT_EQ(alistCopy.size(), 3);
+}
+
+TEST(ListTest, test_autolist_node)
+{
+    auto cloneF = [](const ListCell* cell) {
+        return makeIdent(castNode<Ident>(cell)->name);
+    };
+
+    AutoList<Node> alist(cloneF);
+    alist.push_back(makeIdent(L"delak"));
+    alist.push_back(makeIdent(L"bolek"));
+    alist.push_back(makeIdent(L"monika"));
+    EXPECT_EQ(alist.size(), 3);
+    AutoList<Node> alistCopy = alist;
+    EXPECT_EQ(alistCopy.size(), 3);
+}
+
 
 int main(int argc, char* argv[]) 
 {    
