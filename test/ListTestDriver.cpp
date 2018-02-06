@@ -2,10 +2,8 @@
 // This file contains tests regarding
 // reverse implementations as well as generic List handling
 // To work with List structure in more convenient way
-// new API was provided that allows to use it in similar way as
+// new API was provided as well as AutoList<> type that allows to use it in similar way as
 // other STL containers. For instance, List can be used with STL algorithms
-// There are possible further improvements, for instance, building a container similar to STL containers on top 
-// of provided API
 //
 
 #include <functional>
